@@ -1,0 +1,104 @@
+{{define "pages/admin/estadisticas.html"}}
+<div>
+  <h1 class="text-xl font-bold text-slate-900 mb-4">Reportes de Transacciones</h1>
+
+  <!-- Form filtros -->
+  <form method="GET" action="/admin/estadisticas" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mb-4 flex flex-wrap items-end gap-4">
+    <div>
+      <label class="block text-xs font-semibold text-slate-500 mb-1" for="f-tipo">Tipo</label>
+      <select name="tipo" id="f-tipo" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-white">
+        <option value="meses" {{if eq .Tipo "meses"}}selected{{end}}>Meses</option>
+        <option value="dias" {{if eq .Tipo "dias"}}selected{{end}}>Días</option>
+        <option value="tiendas" {{if eq .Tipo "tiendas"}}selected{{end}}>Tiendas</option>
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-500 mb-1" for="f-anio">Año</label>
+      <input type="number" name="anio" id="f-anio" value="{{.Anio}}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 w-28">
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-500 mb-1" for="f-fecha-desde">Desde</label>
+      <input type="date" name="fecha_desde" id="f-fecha-desde" value="{{.FechaDesde}}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+    <div>
+      <label class="block text-xs font-semibold text-slate-500 mb-1" for="f-fecha-hasta">Hasta</label>
+      <input type="date" name="fecha_hasta" id="f-fecha-hasta" value="{{.FechaHasta}}" class="rounded-lg border border-slate-300 px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+    </div>
+    <button type="submit" class="inline-flex items-center justify-center rounded-lg bg-indigo-600 px-4 py-1.5 text-sm font-semibold text-white hover:bg-indigo-700">Generar</button>
+    <a href="/admin/estadisticas/reporte_pdf?tipo={{.Tipo}}&amp;anio={{.Anio}}&amp;fecha_desde={{.FechaDesde}}&amp;fecha_hasta={{.FechaHasta}}" class="inline-flex items-center justify-center rounded-lg border border-indigo-600 px-4 py-1.5 text-sm font-semibold text-indigo-600 hover:bg-indigo-50">PDF</a>
+  </form>
+
+  <!-- Resumen -->
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+      <p class="text-xs font-semibold text-slate-500">Pagos</p>
+      <p class="mt-1 text-2xl font-bold text-slate-900">{{index (index .Resumen "pagos") "cantidad"}}</p>
+      <p class="text-sm text-slate-600">${{money (index (index .Resumen "pagos") "monto")}}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+      <p class="text-xs font-semibold text-slate-500">Devoluciones</p>
+      <p class="mt-1 text-2xl font-bold text-slate-900">{{index (index .Resumen "devoluciones") "cantidad"}}</p>
+      <p class="text-sm text-slate-600">${{money (index (index .Resumen "devoluciones") "monto")}}</p>
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+      <p class="text-xs font-semibold text-slate-500">Neto</p>
+      <p class="mt-1 text-2xl font-bold text-slate-900">{{index (index .Resumen "neto") "cantidad"}}</p>
+      <p class="text-sm text-slate-600">${{money (index (index .Resumen "neto") "monto")}}</p>
+    </div>
+  </div>
+
+  <!-- Tabla de datos -->
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+    <table class="min-w-full divide-y divide-slate-200">
+      <thead class="bg-slate-50">
+        <tr>
+          {{if eq .Tipo "meses"}}
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Mes</th>
+          {{else if eq .Tipo "dias"}}
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Día</th>
+          {{else}}
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tienda</th>
+          {{end}}
+          <th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Pagos Cant</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Pagos Monto</th>
+          {{if ne .Tipo "tiendas"}}
+          <th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Dev Cant</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Dev Monto</th>
+          <th class="px-4 py-2 text-right text-xs font-semibold uppercase tracking-wide text-slate-500">Neto</th>
+          {{end}}
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {{range .Datos}}
+        <tr class="hover:bg-slate-50">
+          <td class="px-4 py-2 text-sm text-slate-700">{{index . "etiqueta"}}</td>
+          <td class="px-4 py-2 text-sm text-slate-700 text-right">{{index . "pagos_count"}}</td>
+          <td class="px-4 py-2 text-sm text-slate-700 text-right">${{money (index . "pagos_monto")}}</td>
+          {{if ne $.Tipo "tiendas"}}
+          <td class="px-4 py-2 text-sm text-slate-700 text-right">{{index . "dev_count"}}</td>
+          <td class="px-4 py-2 text-sm text-slate-700 text-right">${{money (index . "dev_monto")}}</td>
+          <td class="px-4 py-2 text-sm text-slate-700 text-right">${{money (index . "neto_monto")}}</td>
+          {{end}}
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="{{if eq .Tipo "tiendas"}}3{{else}}6{{end}}" class="px-4 py-6 text-center text-sm text-slate-400">No hay datos para los filtros seleccionados</td>
+        </tr>
+        {{end}}
+      </tbody>
+      <tfoot class="bg-slate-50">
+        <tr>
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900">TOTALES</td>
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900 text-right">{{index .Totales "pagos_count"}}</td>
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900 text-right">${{money (index .Totales "pagos_monto")}}</td>
+          {{if ne .Tipo "tiendas"}}
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900 text-right">{{index .Totales "dev_count"}}</td>
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900 text-right">${{money (index .Totales "dev_monto")}}</td>
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900 text-right">${{money (index .Totales "neto_monto")}}</td>
+          {{end}}
+        </tr>
+      </tfoot>
+    </table>
+  </div>
+</div>
+{{end}}

@@ -1,0 +1,86 @@
+{{define "pages/admin/notificaciones_list.html"}}
+{{$baseURL := "/admin/notificaciones"}}
+{{if eq .ActivePage "notificaciones_devolucion"}}{{$baseURL = "/admin/notificaciones/devolucion"}}{{end}}
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-xl font-bold text-slate-900">
+    {{if eq .Tipo "pago"}}Notificaciones de Pago{{else}}Notificaciones de Devolución{{end}}
+  </h1>
+  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Total: {{.Total}}</span>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+  <table class="min-w-full divide-y divide-slate-200">
+    <thead class="bg-slate-50">
+      <tr>
+        {{if eq .Tipo "pago"}}
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Phone</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">External ID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">TMID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Bank ID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+        {{else}}
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Refund ID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Success</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Result Msg</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Status</th>
+        {{end}}
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {{range .Notificaciones}}
+      <tr class="hover:bg-slate-50">
+        {{if eq $.Tipo "pago"}}
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "id"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-500 whitespace-nowrap">{{fmtFechaHora (index . "fecha")}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "phone"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "external_id"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "tmid"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "bankid"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "status"}}</td>
+        {{else}}
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "id"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-500 whitespace-nowrap">{{fmtFechaHora (index . "fecha")}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "refund_id"}}</td>
+        <td class="px-4 py-2 text-sm">
+          {{if index . "success"}}
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Sí</span>
+          {{else}}
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">No</span>
+          {{end}}
+        </td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "resultmsg"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "status"}}</td>
+        {{end}}
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="{{if eq .Tipo "pago"}}7{{else}}6{{end}}" class="px-4 py-6 text-center text-sm text-slate-400">No hay notificaciones</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+{{if gt .TotalPages 1}}
+<nav class="flex items-center justify-center gap-1 mt-4">
+  {{if gt .Page 1}}
+  <a href="{{$baseURL}}?page={{sub .Page 1}}" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Anterior</a>
+  {{end}}
+  {{range seq .TotalPages}}
+    {{if eq . $.Page}}
+    <span class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white">{{.}}</span>
+    {{else}}
+    <a href="{{$baseURL}}?page={{.}}" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">{{.}}</a>
+    {{end}}
+  {{end}}
+  {{if lt .Page .TotalPages}}
+  <a href="{{$baseURL}}?page={{add .Page 1}}" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Siguiente</a>
+  {{end}}
+</nav>
+{{end}}
+{{end}}

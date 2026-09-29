@@ -1,0 +1,60 @@
+{{define "pages/portal/pago_detail.html"}}
+<div class="space-y-6">
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-slate-900">Detalle del Pago #{{index .Pago "id"}}</h1>
+    <a href="/portal/pagos" class="text-sm text-slate-500 hover:text-slate-700 font-medium">← Volver</a>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <p class="text-xs uppercase text-slate-500 mb-1">Importe</p>
+    <p class="text-3xl font-bold text-slate-900">${{money (index .Pago "importe")}}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+    <div class="grid grid-cols-2 gap-4">
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Operación</p>
+        <p class="font-medium text-slate-800"><code class="text-xs bg-slate-100 rounded px-1.5 py-0.5">{{index .Pago "idoperacion"}}</code></p>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Tienda</p>
+        <p class="font-medium text-slate-800">{{index .Pago "uid"}}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Cliente</p>
+        <p class="font-medium text-slate-800">{{index .Pago "cliente"}}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Estado</p>
+        <p class="font-medium text-slate-800">{{estadoBadge (index .Pago "estado")}}</p>
+      </div>
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Fecha</p>
+        <p class="font-medium text-slate-800">{{fmtFechaHora (index .Pago "fecha")}}</p>
+      </div>
+      {{if index .Pago "orderid"}}
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Order ID</p>
+        <p class="font-medium text-slate-800">{{index .Pago "orderid"}}</p>
+      </div>
+      {{end}}
+      {{if index .Pago "tmid"}}
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">TMID</p>
+        <p class="font-medium text-slate-800">{{index .Pago "tmid"}}</p>
+      </div>
+      {{end}}
+      {{if index .Pago "bankid"}}
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">Bank ID</p>
+        <p class="font-medium text-slate-800">{{index .Pago "bankid"}}</p>
+      </div>
+      {{end}}
+      {{if index .Pago "url_texto"}}
+      <div>
+        <p class="text-xs uppercase text-slate-500 mb-1">URL</p>
+        <p class="font-medium text-slate-800">{{index .Pago "url_texto"}}</p>
+      </div>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}

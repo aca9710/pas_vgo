@@ -1,0 +1,72 @@
+{{define "pages/admin/dashboard.html"}}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Total</p>
+    <p class="text-2xl font-bold text-slate-900 mt-1">{{index .Stats "total_pagos"}}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Exitosos</p>
+    <p class="text-2xl font-bold text-emerald-600 mt-1">{{index .Stats "pagos_exitosos"}}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">Monto</p>
+    <p class="text-2xl font-bold text-slate-900 mt-1">${{money (index .Stats "monto_total")}}</p>
+  </div>
+  <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4">
+    <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">En Proceso</p>
+    <p class="text-2xl font-bold text-amber-600 mt-1">{{index .Stats "pagos_proceso"}}</p>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 mt-6">
+  <div class="px-4 py-3 border-b border-slate-100">
+    <h3 class="font-bold text-slate-900">Últimos Pagos</h3>
+  </div>
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-slate-200">
+      <thead class="bg-slate-50">
+        <tr>
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Operación</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Cliente</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Importe</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Estado</th>
+          <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha</th>
+          <th class="px-4 py-2"></th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-slate-100">
+        {{range .UltimosPagos}}
+        <tr class="hover:bg-slate-50">
+          <td class="px-4 py-2"><code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-slate-700">{{index . "idoperacion"}}</code></td>
+          <td class="px-4 py-2 text-sm text-slate-700">{{index . "cliente"}}</td>
+          <td class="px-4 py-2 text-sm font-semibold text-slate-900">${{money (index . "importe")}}</td>
+          <td class="px-4 py-2">{{estadoBadge (index . "estado")}}</td>
+          <td class="px-4 py-2 text-sm text-slate-500">{{fmtFechaHora (index . "fecha")}}</td>
+          <td class="px-4 py-2 text-right">
+            <a href="/admin/pagos/{{index . "id"}}" class="text-indigo-600 hover:text-indigo-800 text-sm font-medium">Ver</a>
+          </td>
+        </tr>
+        {{else}}
+        <tr>
+          <td colspan="6" class="px-4 py-6 text-center text-sm text-slate-400">No hay pagos registrados</td>
+        </tr>
+        {{end}}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 mt-6">
+  <h3 class="font-bold text-slate-900 mb-4">Distribución por Estado</h3>
+  <canvas id="estadosChart" height="200"></canvas>
+</div>
+<script>
+const labels = [{{range .EstadosLabels}}"{{.}}",{{end}}];
+const data = [{{range .EstadosData}}{{.}},{{end}}];
+new Chart(document.getElementById('estadosChart'), {
+  type: 'doughnut',
+  data: { labels: labels, datasets: [{ data: data, backgroundColor: ['#10B981','#EF4444','#0EA5E9','#F59E0B','#64748B'] }] },
+  options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+{{end}}

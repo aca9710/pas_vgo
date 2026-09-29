@@ -1,0 +1,88 @@
+{{define "pages/admin/usuarios_list.html"}}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-bold text-slate-800">Usuarios</h1>
+    <a href="/admin/usuarios/crear"
+       class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nuevo Usuario
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ID</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Username</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Rol</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tiendas</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Estado</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {{range .Usuarios}}
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 text-sm text-slate-500">{{index . "id"}}</td>
+                <td class="px-4 py-3 text-sm font-medium text-slate-800">{{index . "username"}}</td>
+                <td class="px-4 py-3 text-sm">
+                    {{if eq (index . "rol") "admin"}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-rose-100 text-rose-700">admin</span>
+                    {{else}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">user</span>
+                    {{end}}
+                </td>
+                <td class="px-4 py-3 text-sm">
+                    <div class="flex flex-wrap gap-1">
+                        {{range (index . "tiendas")}}
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-sky-100 text-sky-700">{{index . "nombre"}}</span>
+                        {{end}}
+                    </div>
+                </td>
+                <td class="px-4 py-3 text-sm">
+                    {{if index . "activo"}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Activo</span>
+                    {{else}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">Inactivo</span>
+                    {{end}}
+                </td>
+                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                    <a href="/admin/usuarios/{{index . "id"}}/editar"
+                       class="text-indigo-600 hover:text-indigo-800 font-medium mr-3">Editar</a>
+                    <a href="/admin/usuarios/{{index . "id"}}/eliminar"
+                       class="text-rose-600 hover:text-rose-800 font-medium"
+                       onclick="return confirm('¿Eliminar este usuario?')">Eliminar</a>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+
+    {{if not .Usuarios}}
+    <div class="text-center py-8 text-slate-500 text-sm">No hay usuarios registrados</div>
+    {{end}}
+</div>
+
+{{if gt .TotalPages 1}}
+<nav class="flex items-center justify-center gap-1 mt-4">
+    {{if gt .Page 1}}
+    <a href="/admin/usuarios?page={{sub .Page 1}}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">&laquo; Anterior</a>
+    {{end}}
+    {{range seq .TotalPages}}
+    {{if eq . $.Page}}
+    <span class="px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white">{{.}}</span>
+    {{else}}
+    <a href="/admin/usuarios?page={{.}}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{{.}}</a>
+    {{end}}
+    {{end}}
+    {{if lt .Page .TotalPages}}
+    <a href="/admin/usuarios?page={{add .Page 1}}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Siguiente &raquo;</a>
+    {{end}}
+</nav>
+{{end}}
+{{end}}

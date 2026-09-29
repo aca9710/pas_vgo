@@ -1,0 +1,182 @@
+{{define "pages/admin/tiendas_list.html"}}
+<!-- Encabezado de página -->
+<div class="mb-6 flex items-center justify-between">
+    <div>
+        <h1 class="text-xl font-bold text-slate-900">Tiendas</h1>
+        <p class="text-sm text-slate-500">Gestión de tiendas de la pasarela</p>
+    </div>
+    <button type="button"
+            hx-on:click="document.getElementById('create-form').classList.toggle('hidden')"
+            class="inline-flex items-center gap-2 rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nueva Tienda
+    </button>
+</div>
+
+{{if .Error}}
+<div class="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">{{.Error}}</div>
+{{end}}
+
+<!-- Formulario inline de creación -->
+<div id="create-form" class="mb-4 hidden">
+    <form method="post" action="/admin/tiendas" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <div>
+                <label for="tienda-uid" class="mb-1 block text-sm font-medium text-slate-700">UID</label>
+                <input type="text" id="tienda-uid" name="uid" required maxlength="20" placeholder="TI001"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="tienda-nombre" class="mb-1 block text-sm font-medium text-slate-700">Nombre</label>
+                <input type="text" id="tienda-nombre" name="nombre" maxlength="100"
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="tienda-produccion" class="mb-1 block text-sm font-medium text-slate-700">URL Producción</label>
+                <input type="url" id="tienda-produccion" name="produccion" placeholder="https://..."
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="tienda-desarrollo" class="mb-1 block text-sm font-medium text-slate-700">URL Desarrollo</label>
+                <input type="url" id="tienda-desarrollo" name="desarrollo" placeholder="https://..."
+                       class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            </div>
+            <div>
+                <label for="tienda-entidad" class="mb-1 block text-sm font-medium text-slate-700">Entidad</label>
+                <select id="tienda-entidad" name="entidad_id"
+                        class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="">-- Sin entidad --</option>
+                    {{range .Entidades}}
+                    <option value="{{index . "id"}}">{{index . "nombre"}}</option>
+                    {{end}}
+                </select>
+            </div>
+            <div class="flex items-end">
+                <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                    <input type="checkbox" name="activa" checked
+                           class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    Activa
+                </label>
+            </div>
+        </div>
+        <div class="mt-4 flex justify-end gap-2">
+            <button type="button"
+                    hx-on:click="document.getElementById('create-form').classList.add('hidden')"
+                    class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+                Cancelar
+            </button>
+            <button type="submit"
+                    class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">
+                Crear
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- Tabla de tiendas -->
+<div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+            <thead>
+            <tr class="bg-slate-50 text-left text-xs uppercase tracking-wide text-slate-500">
+                <th class="px-4 py-3 font-semibold">UID</th>
+                <th class="px-4 py-3 font-semibold">Nombre</th>
+                <th class="px-4 py-3 font-semibold">Producción</th>
+                <th class="px-4 py-3 font-semibold">Desarrollo</th>
+                <th class="px-4 py-3 font-semibold">Entidad</th>
+                <th class="px-4 py-3 font-semibold">Estado</th>
+                <th class="px-4 py-3 text-right font-semibold">Acciones</th>
+            </tr>
+            </thead>
+            <tbody>
+            {{range .Tiendas}}
+            <tr class="border-t border-slate-100 hover:bg-slate-50">
+                <td class="px-4 py-3">
+                    <code class="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-xs text-slate-700">{{index . "uid"}}</code>
+                </td>
+                <td class="px-4 py-3 font-medium text-slate-800">
+                    {{if index . "nombre"}}{{index . "nombre"}}{{else}}<span class="text-slate-400">—</span>{{end}}
+                </td>
+                <td class="max-w-[200px] truncate px-4 py-3 text-slate-600">
+                    {{if index . "produccion"}}{{index . "produccion"}}{{else}}<span class="text-slate-400">—</span>{{end}}
+                </td>
+                <td class="max-w-[200px] truncate px-4 py-3 text-slate-600">
+                    {{if index . "desarrollo"}}{{index . "desarrollo"}}{{else}}<span class="text-slate-400">—</span>{{end}}
+                </td>
+                <td class="px-4 py-3 text-slate-600">
+                    {{$eid := index . "entidad_id"}}
+                    {{if not $eid}}<span class="text-slate-400">—</span>
+                    {{else}}
+                        {{$nombre := ""}}
+                        {{range $.Entidades}}{{if eq (printf "%v" (index . "id")) (printf "%v" $eid)}}{{$nombre = index . "nombre"}}{{end}}{{end}}
+                        {{if $nombre}}{{$nombre}}{{else}}{{$eid}}{{end}}
+                    {{end}}
+                </td>
+                <td class="px-4 py-3">
+                    {{if index . "activa"}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Activa</span>
+                    {{else}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Inactiva</span>
+                    {{end}}
+                </td>
+                <td class="whitespace-nowrap px-4 py-3 text-right">
+                    <a href="/admin/tiendas/{{index . "uid"}}/editar"
+                       hx-get="/admin/tiendas/{{index . "uid"}}/editar"
+                       hx-target="#content" hx-push-url="true"
+                       class="text-sm font-medium text-indigo-600 hover:text-indigo-800">Editar</a>
+                    <button type="button"
+                            hx-delete="/admin/tiendas/{{index . "uid"}}"
+                            hx-confirm="¿Eliminar esta tienda?"
+                            hx-target="body"
+                            class="ml-3 text-sm font-medium text-rose-600 hover:text-rose-800">Eliminar</button>
+                </td>
+            </tr>
+            {{else}}
+            <tr>
+                <td colspan="7" class="px-4 py-16 text-center">
+                    <div class="flex flex-col items-center justify-center text-center">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-10 w-10 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M13.5 21v-7.5a.75.75 0 01.75-.75h3a.75.75 0 01.75.75V21m-4.5 0H2.36m11.14 0H18m0 0h3.64m-1.39 0V9.349m-16.5 11.65V9.35m0 0a3.001 3.001 0 003.75-.615A2.993 2.993 0 009.75 9.75c.896 0 1.7-.393 2.25-1.016a2.993 2.993 0 002.25 1.016c.896 0 1.7-.393 2.25-1.016a3.001 3.001 0 003.75.614m-16.5 0a3.004 3.004 0 01-.621-4.72L4.318 3.44A1.5 1.5 0 015.378 3h13.243a1.5 1.5 0 011.06.44l1.19 1.189a3 3 0 01-.621 4.72m-13.5 8.65h3.75a.75.75 0 00.75-.75V13.5a.75.75 0 00-.75-.75H6.75a.75.75 0 00-.75.75v3.75c0 .414.336.75.75.75z"/>
+                        </svg>
+                        <p class="mt-2 text-sm text-slate-500">No hay tiendas registradas</p>
+                    </div>
+                </td>
+            </tr>
+            {{end}}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Paginación -->
+{{if and .TotalPages (gt .TotalPages 1)}}
+<nav class="mt-4 flex items-center justify-center gap-1">
+    {{if gt .Page 1}}
+    <a href="/admin/tiendas?page={{sub .Page 1}}"
+       hx-get="/admin/tiendas?page={{sub .Page 1}}"
+       hx-target="#content" hx-push-url="true"
+       class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Anterior</a>
+    {{end}}
+    {{range $p := seq .TotalPages}}
+    {{if and (le $p (add $.Page 5)) (ge $p (sub $.Page 5))}}
+    {{if eq $p $.Page}}
+    <span class="rounded-lg bg-indigo-600 px-3 py-1.5 text-sm font-semibold text-white">{{$p}}</span>
+    {{else}}
+    <a href="/admin/tiendas?page={{$p}}"
+       hx-get="/admin/tiendas?page={{$p}}"
+       hx-target="#content" hx-push-url="true"
+       class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">{{$p}}</a>
+    {{end}}
+    {{end}}
+    {{end}}
+    {{if lt .Page .TotalPages}}
+    <a href="/admin/tiendas?page={{add .Page 1}}"
+       hx-get="/admin/tiendas?page={{add .Page 1}}"
+       hx-target="#content" hx-push-url="true"
+       class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-sm text-slate-700 hover:bg-slate-50">Siguiente</a>
+    {{end}}
+</nav>
+{{end}}
+{{end}}

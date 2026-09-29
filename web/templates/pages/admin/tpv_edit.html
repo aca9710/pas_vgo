@@ -1,0 +1,58 @@
+{{define "pages/admin/tpv_edit.html"}}
+<div class="mx-auto max-w-2xl">
+    <div class="mb-6">
+        <h1 class="text-xl font-bold text-slate-900">Editar TPV #{{index .TPV "id"}}</h1>
+        <p class="text-sm text-slate-500">Actualiza los datos del terminal de pago virtual</p>
+    </div>
+
+    <form method="post" action="/admin/tpv/{{index .TPV "id"}}/editar" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mb-4">
+            <label for="tpv-uid" class="mb-1 block text-sm font-medium text-slate-700">Tienda</label>
+            <select id="tpv-uid" name="uid" required
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="">-- Seleccionar tienda --</option>
+                {{range .Tiendas}}
+                <option value="{{index . "uid"}}" {{if eq (index . "uid") (index $.TPV "uid")}}selected{{end}}>{{index . "uid"}} - {{if index . "nombre"}}{{index . "nombre"}}{{else}}Sin nombre{{end}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label for="tpv-dirip" class="mb-1 block text-sm font-medium text-slate-700">Dirección IP</label>
+            <input type="text" id="tpv-dirip" name="dirip" required
+                   value="{{index .TPV "dirip"}}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="tpv-identoptima" class="mb-1 block text-sm font-medium text-slate-700">Ident Óptima</label>
+            <input type="text" id="tpv-identoptima" name="identoptima"
+                   value="{{if index .TPV "identoptima"}}{{index .TPV "identoptima"}}{{end}}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="tpv-nombre" class="mb-1 block text-sm font-medium text-slate-700">Nombre</label>
+            <input type="text" id="tpv-nombre" name="nombre"
+                   value="{{if index .TPV "nombre"}}{{index .TPV "nombre"}}{{end}}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input type="checkbox" name="activo" {{if index .TPV "activo"}}checked{{end}}
+                       class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                Activo
+            </label>
+        </div>
+
+        <div class="flex justify-between">
+            <a href="/admin/tpv"
+               hx-get="/admin/tpv" hx-target="#content" hx-push-url="true"
+               class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Cancelar</a>
+            <button type="submit"
+                    class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">Guardar</button>
+        </div>
+    </form>
+</div>
+{{end}}

@@ -1,0 +1,66 @@
+{{define "pages/portal/dashboard.html"}}
+<div class="space-y-6">
+  <div>
+    <h1 class="text-2xl font-bold text-slate-900">Bienvenido, {{.Cliente.ClienteNombre}}</h1>
+    <p class="text-sm text-slate-500 mt-1">Resumen de tus pagos y devoluciones</p>
+  </div>
+  <div class="grid md:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Pagos Recientes</h2>
+      {{if .Pagos}}
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase text-slate-500 border-b border-slate-200">
+            <th class="py-2">ID</th>
+            <th class="py-2">Fecha</th>
+            <th class="py-2">Importe</th>
+            <th class="py-2">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Pagos}}
+          <tr class="border-b border-slate-100">
+            <td class="py-2"><a href="/portal/pagos/{{index . "id"}}" class="text-indigo-600 hover:text-indigo-700 font-medium">{{index . "id"}}</a></td>
+            <td class="py-2 text-slate-600">{{fmtFecha (index . "fecha")}}</td>
+            <td class="py-2 font-medium text-slate-800">${{money (index . "importe")}}</td>
+            <td class="py-2">{{estadoBadge (index . "estado")}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <a href="/portal/pagos" class="inline-block mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium">Ver todos los pagos →</a>
+      {{else}}
+      <p class="text-sm text-slate-500">No tienes pagos registrados.</p>
+      {{end}}
+    </div>
+    <div class="bg-white rounded-xl shadow-sm border border-slate-200 p-6">
+      <h2 class="text-lg font-bold text-slate-900 mb-4">Devoluciones Recientes</h2>
+      {{if .Devoluciones}}
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="text-left text-xs uppercase text-slate-500 border-b border-slate-200">
+            <th class="py-2">ID</th>
+            <th class="py-2">Fecha</th>
+            <th class="py-2">Importe</th>
+            <th class="py-2">Estado</th>
+          </tr>
+        </thead>
+        <tbody>
+          {{range .Devoluciones}}
+          <tr class="border-b border-slate-100">
+            <td class="py-2"><a href="/portal/devoluciones/{{index . "id"}}" class="text-indigo-600 hover:text-indigo-700 font-medium">{{index . "id"}}</a></td>
+            <td class="py-2 text-slate-600">{{fmtFecha (index . "fecha")}}</td>
+            <td class="py-2 font-medium text-slate-800">${{money (index . "importe")}}</td>
+            <td class="py-2">{{estadoBadge (index . "estado")}}</td>
+          </tr>
+          {{end}}
+        </tbody>
+      </table>
+      <a href="/portal/devoluciones" class="inline-block mt-4 text-sm text-indigo-600 hover:text-indigo-700 font-medium">Ver todas las devoluciones →</a>
+      {{else}}
+      <p class="text-sm text-slate-500">No tienes devoluciones registradas.</p>
+      {{end}}
+    </div>
+  </div>
+</div>
+{{end}}

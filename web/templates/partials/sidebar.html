@@ -1,0 +1,21 @@
+{{define "partials/sidebar.html"}}
+<div class="p-4">
+  <h4 class="text-white mb-6 font-bold text-lg">Pasarela</h4>
+  <nav class="space-y-1">
+    <a href="/admin/" hx-get="/admin/" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "dashboard"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Dashboard</a>
+    <a href="/admin/pagos" hx-get="/admin/pagos" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "pagos"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Pagos</a>
+    <a href="/admin/pagos/proceso" hx-get="/admin/pagos/proceso" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "pagos_proceso"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">En Proceso</a>
+    <a href="/admin/devoluciones" hx-get="/admin/devoluciones" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "devoluciones"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Devoluciones</a>
+    <a href="/admin/devoluciones/proceso" hx-get="/admin/devoluciones/proceso" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "devoluciones_proceso"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Dev. Proceso</a>
+    <a href="/admin/tiendas" hx-get="/admin/tiendas" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "tiendas"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Tiendas</a>
+    <a href="/admin/tpv" hx-get="/admin/tpv" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "tpv"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">TPV</a>
+    <a href="/admin/notificaciones" hx-get="/admin/notificaciones" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "notificaciones"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Notif. Pago</a>
+    <a href="/admin/notificaciones/devolucion" hx-get="/admin/notificaciones/devolucion" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "notificaciones_devolucion"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Notif. Devolución</a>
+    <a href="/admin/estadisticas" hx-get="/admin/estadisticas" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "estadisticas"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Reportes</a>
+    {{if eq .Admin.Rol "admin"}}
+    <a href="/admin/entidades" hx-get="/admin/entidades" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "entidades"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Entidades</a>
+    <a href="/admin/usuarios" hx-get="/admin/usuarios" hx-target="#content" hx-push-url="true" class="block px-3 py-2 rounded-lg text-sm {{if eq .ActivePage "usuarios"}}bg-white/10 text-white{{else}}text-slate-300 hover:bg-white/10 hover:text-white{{end}}">Usuarios</a>
+    {{end}}
+  </nav>
+</div>
+{{end}}

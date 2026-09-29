@@ -1,0 +1,62 @@
+{{define "pages/admin/devoluciones_list.html"}}
+{{$baseURL := "/admin/devoluciones"}}
+{{if eq .ActivePage "devoluciones_proceso"}}{{$baseURL = "/admin/devoluciones/proceso"}}{{end}}
+
+<div class="flex items-center justify-between mb-4">
+  <h1 class="text-xl font-bold text-slate-900">
+    {{if eq .ActivePage "devoluciones_proceso"}}Devoluciones en Proceso{{else}}Devoluciones{{end}}
+  </h1>
+  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600">Total: {{.Total}}</span>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-x-auto">
+  <table class="min-w-full divide-y divide-slate-200">
+    <thead class="bg-slate-50">
+      <tr>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">ID</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Operación</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Tienda</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Cliente</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Importe</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Estado</th>
+        <th class="px-4 py-2 text-left text-xs font-semibold uppercase tracking-wide text-slate-500">Fecha</th>
+      </tr>
+    </thead>
+    <tbody class="divide-y divide-slate-100">
+      {{range .Devoluciones}}
+      <tr class="hover:bg-slate-50">
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "id"}}</td>
+        <td class="px-4 py-2"><code class="bg-slate-100 px-1.5 py-0.5 rounded text-xs text-slate-700">{{index . "idoperacion"}}</code></td>
+        <td class="px-4 py-2 text-sm text-slate-500">{{index . "uid"}}</td>
+        <td class="px-4 py-2 text-sm text-slate-700">{{index . "cliente"}}</td>
+        <td class="px-4 py-2 text-sm font-semibold text-slate-900">${{money (index . "importe")}}</td>
+        <td class="px-4 py-2">{{estadoBadge (index . "estado")}}</td>
+        <td class="px-4 py-2 text-sm text-slate-500">{{fmtFechaHora (index . "fecha")}}</td>
+      </tr>
+      {{else}}
+      <tr>
+        <td colspan="7" class="px-4 py-6 text-center text-sm text-slate-400">No hay devoluciones registradas</td>
+      </tr>
+      {{end}}
+    </tbody>
+  </table>
+</div>
+
+{{if gt .TotalPages 1}}
+<nav class="flex items-center justify-center gap-1 mt-4">
+  {{if gt .Page 1}}
+  <a href="{{$baseURL}}?page={{sub .Page 1}}" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Anterior</a>
+  {{end}}
+  {{range seq .TotalPages}}
+    {{if eq . $.Page}}
+    <span class="px-3 py-1.5 rounded-lg text-sm font-semibold bg-indigo-600 text-white">{{.}}</span>
+    {{else if and (ge . (sub $.Page 5)) (le . (add $.Page 5))}}
+    <a href="{{$baseURL}}?page={{.}}" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">{{.}}</a>
+    {{end}}
+  {{end}}
+  {{if lt .Page .TotalPages}}
+  <a href="{{$baseURL}}?page={{add .Page 1}}" class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100">Siguiente</a>
+  {{end}}
+</nav>
+{{end}}
+{{end}}

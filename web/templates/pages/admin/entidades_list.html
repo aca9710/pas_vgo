@@ -1,0 +1,84 @@
+{{define "pages/admin/entidades_list.html"}}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-bold text-slate-800">Entidades</h1>
+    <a href="/admin/entidades/crear"
+       class="inline-flex items-center gap-1 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-3 py-2 rounded-lg transition-colors">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+        </svg>
+        Nueva Entidad
+    </a>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+    <table class="min-w-full divide-y divide-slate-200">
+        <thead class="bg-slate-50">
+            <tr>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">ID</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Nombre</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Llave</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Admin</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Tiendas</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Usuarios</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Estado</th>
+                <th class="px-4 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Acciones</th>
+            </tr>
+        </thead>
+        <tbody class="divide-y divide-slate-100">
+            {{range .Entidades}}
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-4 py-3 text-sm text-slate-500">{{index . "id"}}</td>
+                <td class="px-4 py-3 text-sm font-medium text-slate-800">{{index . "nombre"}}</td>
+                <td class="px-4 py-3 text-sm">
+                    <code class="bg-slate-100 text-slate-700 px-1.5 py-0.5 rounded text-xs">{{index . "llave"}}</code>
+                </td>
+                <td class="px-4 py-3 text-sm text-slate-600">
+                    {{if index . "admin_username"}}{{index . "admin_username"}}{{else}}<span class="text-slate-400">&mdash;</span>{{end}}
+                </td>
+                <td class="px-4 py-3 text-sm text-slate-600">{{index . "num_tiendas"}}</td>
+                <td class="px-4 py-3 text-sm text-slate-600">{{index . "num_usuarios"}}</td>
+                <td class="px-4 py-3 text-sm">
+                    {{if index . "activo"}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">Activa</span>
+                    {{else}}
+                    <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-500">Inactiva</span>
+                    {{end}}
+                </td>
+                <td class="px-4 py-3 text-sm whitespace-nowrap">
+                    <a href="/admin/entidades/{{index . "id"}}/editar"
+                       class="text-indigo-600 hover:text-indigo-800 font-medium mr-3">Editar</a>
+                    <a href="/admin/entidades/{{index . "id"}}/eliminar"
+                       class="text-rose-600 hover:text-rose-800 font-medium"
+                       onclick="return confirm('¿Eliminar esta entidad?')">Eliminar</a>
+                </td>
+            </tr>
+            {{end}}
+        </tbody>
+    </table>
+
+    {{if not .Entidades}}
+    <div class="text-center py-8 text-slate-500 text-sm">No hay entidades registradas</div>
+    {{end}}
+</div>
+
+{{if gt .TotalPages 1}}
+<nav class="flex items-center justify-center gap-1 mt-4">
+    {{if gt .Page 1}}
+    <a href="/admin/entidades?page={{sub .Page 1}}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">&laquo; Anterior</a>
+    {{end}}
+    {{range seq .TotalPages}}
+    {{if eq . $.Page}}
+    <span class="px-3 py-1.5 rounded-lg text-sm font-medium bg-indigo-600 text-white">{{.}}</span>
+    {{else}}
+    <a href="/admin/entidades?page={{.}}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">{{.}}</a>
+    {{end}}
+    {{end}}
+    {{if lt .Page .TotalPages}}
+    <a href="/admin/entidades?page={{add .Page 1}}"
+       class="px-3 py-1.5 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Siguiente &raquo;</a>
+    {{end}}
+</nav>
+{{end}}
+{{end}}

@@ -1,0 +1,64 @@
+{{define "pages/admin/tiendas_edit.html"}}
+<div class="mx-auto max-w-2xl">
+    <div class="mb-6">
+        <h1 class="text-xl font-bold text-slate-900">Editar Tienda {{index .Tienda "uid"}}</h1>
+        <p class="text-sm text-slate-500">Actualiza los datos de la tienda</p>
+    </div>
+
+    <form method="post" action="/admin/tiendas/{{index .Tienda "uid"}}/editar" class="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div class="mb-4">
+            <label class="mb-1 block text-sm font-medium text-slate-700">UID</label>
+            <div class="rounded-lg border border-slate-200 bg-slate-100 px-3 py-2 font-mono text-sm text-slate-600">{{index .Tienda "uid"}}</div>
+            <p class="mt-1 text-xs text-slate-400">El UID no se puede modificar</p>
+        </div>
+
+        <div class="mb-4">
+            <label for="tienda-nombre" class="mb-1 block text-sm font-medium text-slate-700">Nombre</label>
+            <input type="text" id="tienda-nombre" name="nombre" maxlength="100"
+                   value="{{if index .Tienda "nombre"}}{{index .Tienda "nombre"}}{{end}}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="tienda-produccion" class="mb-1 block text-sm font-medium text-slate-700">URL Producción</label>
+            <input type="url" id="tienda-produccion" name="produccion" placeholder="https://..."
+                   value="{{if index .Tienda "produccion"}}{{index .Tienda "produccion"}}{{end}}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="tienda-desarrollo" class="mb-1 block text-sm font-medium text-slate-700">URL Desarrollo</label>
+            <input type="url" id="tienda-desarrollo" name="desarrollo" placeholder="https://..."
+                   value="{{if index .Tienda "desarrollo"}}{{index .Tienda "desarrollo"}}{{end}}"
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+        </div>
+
+        <div class="mb-4">
+            <label for="tienda-entidad" class="mb-1 block text-sm font-medium text-slate-700">Entidad</label>
+            <select id="tienda-entidad" name="entidad_id"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="" {{if not (index .Tienda "entidad_id")}}selected{{end}}>-- Sin entidad --</option>
+                {{range .Entidades}}
+                <option value="{{index . "id"}}" {{if eq (printf "%v" (index $.Tienda "entidad_id")) (printf "%v" (index . "id"))}}selected{{end}}>{{index . "nombre"}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="mb-4">
+            <label class="flex items-center gap-2 text-sm font-medium text-slate-700">
+                <input type="checkbox" name="activa" {{if index .Tienda "activa"}}checked{{end}}
+                       class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                Activa
+            </label>
+        </div>
+
+        <div class="flex justify-between">
+            <a href="/admin/tiendas"
+               hx-get="/admin/tiendas" hx-target="#content" hx-push-url="true"
+               class="inline-flex items-center rounded-lg border border-slate-300 bg-white px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">Cancelar</a>
+            <button type="submit"
+                    class="inline-flex items-center rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:bg-indigo-700 transition-colors">Guardar</button>
+        </div>
+    </form>
+</div>
+{{end}}

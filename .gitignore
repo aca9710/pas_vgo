@@ -1,0 +1,59 @@
+# Binarios compilados (api/, web/)
+/api/pasarela
+/web/webgo
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+*.test
+*.out
+bin/
+dist/
+
+# Variables de entorno y secretos
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.crt
+*_rsa
+*_ed25519
+*.p12
+*.pfx
+secrets/
+**/secrets/
+
+# Logs (cubre api/log/, web/log/ y web/.logs/ a cualquier profundidad)
+*.log
+*.log.*
+logs/
+
+# Bases de datos locales
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+/web/engram.db
+
+# Datos generados / artefactos de prueba
+/api/data/*.txt
+/web/openspec.zip
+
+# Sesiones de opencode
+session-ses_*.md
+.ses/
+
+# Backups y temporales
+*.bak
+*.tmp
+*.swp
+*~
+.DS_Store
+Thumbs.db
+
+# IDE / editores
+.idea/
+.vscode/
+*.iml

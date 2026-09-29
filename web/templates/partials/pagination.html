@@ -1,0 +1,17 @@
+{{define "partials/pagination.html"}}
+{{if gt .TotalPages 1}}
+<nav class="flex justify-center mt-4">
+  <ul class="flex gap-1">
+    {{if gt .Page 1}}
+    <li><a href="{{.BaseURL}}?page={{sub .Page 1}}{{.QueryString}}" hx-get="{{.BaseURL}}?page={{sub .Page 1}}{{.QueryString}}" hx-target="#content" hx-push-url="true" class="px-3 py-1 rounded-lg text-sm bg-white border border-slate-200 hover:bg-slate-50">Anterior</a></li>
+    {{end}}
+    {{range seq .TotalPages}}
+    <li><a href="{{$.BaseURL}}?page={{.}}{{$.QueryString}}" hx-get="{{$.BaseURL}}?page={{.}}{{$.QueryString}}" hx-target="#content" hx-push-url="true" class="px-3 py-1 rounded-lg text-sm {{if eq . $.Page}}bg-indigo-600 text-white{{else}}bg-white border border-slate-200 hover:bg-slate-50{{end}}">{{.}}</a></li>
+    {{end}}
+    {{if lt .Page .TotalPages}}
+    <li><a href="{{.BaseURL}}?page={{add .Page 1}}{{.QueryString}}" hx-get="{{.BaseURL}}?page={{add .Page 1}}{{.QueryString}}" hx-target="#content" hx-push-url="true" class="px-3 py-1 rounded-lg text-sm bg-white border border-slate-200 hover:bg-slate-50">Siguiente</a></li>
+    {{end}}
+  </ul>
+</nav>
+{{end}}
+{{end}}

@@ -1,0 +1,67 @@
+{{define "pages/admin/usuarios_create.html"}}
+<div class="flex items-center justify-between mb-4">
+    <h1 class="text-xl font-bold text-slate-800">Nuevo Usuario</h1>
+</div>
+
+<div class="bg-white rounded-xl shadow-sm p-4" style="max-width: 32rem;">
+    <form method="post" action="/admin/usuarios/crear" class="space-y-4">
+        <div>
+            <label for="username" class="block text-sm font-medium text-slate-700 mb-1">Username</label>
+            <input type="text" id="username" name="username" required
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <div>
+            <label for="password" class="block text-sm font-medium text-slate-700 mb-1">Password</label>
+            <input type="password" id="password" name="password" required
+                   class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+        </div>
+
+        <div>
+            <label for="rol" class="block text-sm font-medium text-slate-700 mb-1">Rol</label>
+            <select id="rol" name="rol"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="user" selected>user</option>
+                <option value="admin">admin</option>
+            </select>
+        </div>
+
+        <div>
+            <label for="entidad_id" class="block text-sm font-medium text-slate-700 mb-1">Entidad</label>
+            <select id="entidad_id" name="entidad_id"
+                    class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500">
+                <option value="">Sin entidad</option>
+                {{range .Entidades}}
+                <option value="{{index . "id"}}">{{index . "nombre"}}</option>
+                {{end}}
+            </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+            <input type="checkbox" id="activo" name="activo" checked
+                   class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+            <label for="activo" class="text-sm font-medium text-slate-700">Activo</label>
+        </div>
+
+        <div>
+            <label class="block text-sm font-medium text-slate-700 mb-2">Tiendas</label>
+            <div class="grid grid-cols-2 gap-2">
+                {{range .Tiendas}}
+                <label class="flex items-center gap-2 text-sm text-slate-700">
+                    <input type="checkbox" name="tiendas" value="{{index . "uid"}}"
+                           class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-500">
+                    {{index . "uid"}} - {{index . "nombre"}}
+                </label>
+                {{end}}
+            </div>
+        </div>
+
+        <div class="flex items-center gap-3 pt-2">
+            <a href="/admin/usuarios"
+               class="inline-flex items-center bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-medium px-4 py-2 rounded-lg transition-colors">Cancelar</a>
+            <button type="submit"
+                    class="inline-flex items-center bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors">Crear</button>
+        </div>
+    </form>
+</div>
+{{end}}
