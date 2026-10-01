@@ -293,5 +293,3 @@ helpers HTTP, gestión en memoria de pagos, configuración y cliente HTTP.
   [`doc/sdd-verify-report.md`](doc/sdd-verify-report.md).
 - El contrato Go trata `Source`, `Msg` y `Bank` de `/notificapagos/` como
   opcionales (desviación documentada del pydantic).
-- La implementación Python original se conserva en `python_legacy/` solo como
-  referencia; no se ejecuta.

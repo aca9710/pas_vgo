@@ -38,7 +38,7 @@ POST /pago/
 | Description | string | Sí | Descripción del pago. |
 | ExternalId | string | Sí | ID externo con formato: UID-IDOPERACION. Debe contener un guion (-). |
 | Source | string | Sí | Origen del pago. |
-| ValidTime | string | Sí | Tiempo de validez en segundos (valor entero). |
+| ValidTime | string | Sí | Tiempo de validez en segundos (valor entero). Rango permitido: 30 a 3600. |
 | UrlResponse | string | Sí | URL de respuesta para notificaciones. |
 
 #### Header
@@ -135,7 +135,8 @@ Endpoint síncrono para enviar solicitudes de pago a Transfermóvil (ETECSA). Es
 | Código | Descripción |
 |--------|-------------|
 | 401 Unauthorized | Autenticación inválida (headers faltantes o incorrectos). |
-| 422 Unprocessable Entity | Datos de entrada inválidos (validación de schema). |
+| 413 Payload Too Large | Body mayor que 1 MiB (se rechaza antes de parsear). |
+| 422 Unprocessable Entity | Datos de entrada inválidos (validación de schema, o body ilegible/excedido). |
 | 500 Internal Server Error | Error interno del servidor. |
 
 ---
@@ -160,7 +161,7 @@ POST /pago_a/
 | Description | string | Sí | Descripción del pago. |
 | ExternalId | string | Sí | ID externo con formato: UID-IDOPERACION. Debe contener un guion (-). |
 | Source | string | Sí | Origen del pago. |
-| ValidTime | string | Sí | Tiempo de validez en segundos (valor entero). |
+| ValidTime | string | Sí | Tiempo de validez en segundos (valor entero). Rango permitido: 30 a 3600. |
 | UrlResponse | string | Sí | URL de respuesta para notificaciones. |
 
 #### Header
@@ -257,7 +258,8 @@ El procesamiento de la notificación se realiza en segundo plano mediante el pro
 | Código | Descripción |
 |--------|------------|
 | 401 Unauthorized | Autenticación inválida (headers faltantes o incorrectos). |
-| 422 Unprocessable Entity | Datos de entrada inválidos (validación de schema). |
+| 413 Payload Too Large | Body mayor que 1 MiB (se rechaza antes de parsear). |
+| 422 Unprocessable Entity | Datos de entrada inválidos (validación de schema, o body ilegible/excedido). |
 | 500 Internal Server Error | Error interno del servidor. |
 
 #### Notas

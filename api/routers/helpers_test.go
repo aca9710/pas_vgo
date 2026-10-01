@@ -223,6 +223,22 @@ func TestDecodeJSON(t *testing.T) {
 			{Loc: []string{"body", "Monto"}, Msg: "Input should be a valid float", Type: "type_error"},
 		})
 	})
+
+	t.Run("body mayor que el limite: false y 422 (MaxBytesReader)", func(t *testing.T) {
+		rec := httptest.NewRecorder()
+		grande := `{"Nombre":"` + strings.Repeat("x", maxRequestBody+1024) + `"}`
+		req := httptest.NewRequest(http.MethodPost, "/pago/", strings.NewReader(grande))
+		var v demoRequest
+		if decodeJSON(rec, req, &v, nil) {
+			t.Fatal("decodeJSON deberia devolver false con body excedido")
+		}
+		if rec.Code != http.StatusUnprocessableEntity {
+			t.Fatalf("status = %d, quiere 422", rec.Code)
+		}
+		assertDetail(t, rec, []models.ValidationErrorItem{
+			{Loc: []string{"body"}, Msg: "There was an error parsing the body", Type: "json_invalid"},
+		})
+	})
 }
 
 // =============================================================================

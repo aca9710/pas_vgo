@@ -12,11 +12,14 @@ package pagosadmin
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strconv"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgconn"
 
 	"pasarela/config"
 	"pasarela/database"
@@ -54,6 +57,15 @@ type DataPago struct {
 	BankId      string
 	Bank        string
 	OrderId     int64
+	intentos    int // intentos de Guarda fallidos (ver ProcesarLista)
+}
+
+// sumaIntento incrementa y devuelve el numero de intentos de Guarda.
+func (p *DataPago) sumaIntento() int {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.intentos++
+	return p.intentos
 }
 
 // NewDataPago replica DataPago.__init__.
@@ -144,6 +156,12 @@ func (p *DataPago) Notificado() bool {
 // 13 placeholders, 13 parametros (el Python pasaba 14, incluyendo idmsg que
 // no pertenece al INSERT). Ademas se convierten a int los campos que en la
 // base de datos son integer (estado, vigencia).
+//
+// DESVIACION deliberada del Python: se anaden msg y orderid al INSERT.
+//   - orderid: el Python solo lo asignaba en memoria (num_orden) y jamas lo
+//     persistia, por lo que pagos.orderid se quedaba siempre en 0 (y el UPDATE
+//     de num_orden no encontraba la fila porque el pago aun estaba en memoria).
+//   - msg: sin esto la columna se queda en su valor por defecto (-1).
 func (p *DataPago) Guarda(ctx context.Context) error {
 	if err := p.initAsync(ctx); err != nil {
 		return err
@@ -158,25 +176,44 @@ func (p *DataPago) Guarda(ctx context.Context) error {
 	currency := p.Currency
 	validTime, _ := strconv.Atoi(p.ValidTime)
 	idurl := p.idurl
+	idmsg := p.idmsg
 	phone := p.Phone
 	estado, _ := strconv.Atoi(p.Status)
 	tmID := p.TmId
 	bankID := p.BankId
 	bank := p.Bank
+	orderID := p.OrderId
 	p.mu.Unlock()
 
 	consulta := `INSERT INTO pagos (uid, idoperacion, externalid, cliente, importe, moneda, fecha, vigencia, url,
-	                               celular, estado, tmid, bankid, banco)
-	             VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8, $9, $10, $11, $12, $13) RETURNING id`
+	                               celular, estado, tmid, bankid, banco, msg, orderid)
+	             VALUES ($1, $2, $3, $4, $5, $6, NOW(), $7, $8, $9, $10, $11, $12, $13, $14, $15) RETURNING id`
 	_, err := p.db.InsertReturning(ctx, consulta,
 		uid, idoperacion, externalID, source, amount, currency,
-		validTime, idurl, phone, estado, tmID, bankID, bank)
+		validTime, idurl, phone, estado, tmID, bankID, bank, idmsg, orderID)
 	return err
 }
 
 // =============================================================================
 // AdminPagos — gestion de solicitudes y notificaciones
 // =============================================================================
+
+// maxIntentosGuardado es el numero de reintentos de Guarda antes de descartar
+// el pago (un fallo transitorio de BD no puede perder un pago, pero tampoco
+// puede mantenerlo en memoria para siempre).
+const maxIntentosGuardado = 5
+
+// esErrorPermanente indica si un error de PostgreSQL es de violacion de datos
+// (SQLSTATE clase 23: FK, unique, check, not-null...) y por tanto no mejora
+// reintentando. Un error transitorio (conexion, serializacion, timeout) no lo
+// es: se reintenta.
+func esErrorPermanente(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return len(pgErr.Code) == 5 && pgErr.Code[0] == '2' && pgErr.Code[1] == '3'
+	}
+	return false
+}
 
 type AdminPagos struct {
 	mu sync.Mutex
@@ -193,6 +230,21 @@ type AdminPagos struct {
 	trazanotif []string
 	trazapagos []string
 	vence      time.Time
+
+	// onGuardado se invoca con el ExternalId de cada pago persistido
+	// correctamente, para que la capa de routers libere los marcadores de
+	// Redis (pasarela:listaid y pasarela:por_notificar) y el ExternalId pueda
+	// reutilizarse. Se inyecta con SetOnGuardado: las claves viven en el
+	// paquete routers y no se quiere acoplar pagosadmin a redisclient.
+	onGuardado func(externalid string)
+}
+
+// SetOnGuardado registra el callback que se dispara tras persistir un pago.
+// Si fn es nil, ProcesarLista omite la notificacion.
+func (a *AdminPagos) SetOnGuardado(fn func(externalid string)) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.onGuardado = fn
 }
 
 // New crea un AdminPagos (equivalente a AdminPagos(db)).
@@ -317,6 +369,46 @@ func (a *AdminPagos) logLocked(tipo string, modelo *models.NotificacionRequest, 
 	return nil
 }
 
+// maxNotifPendientes acota notificaciones / notifPr / notifjson. En el Python
+// estos tres dicts crecen sin limite y nunca se limpian: una notificacion de
+// un ExternalId inexistente se re-encola para siempre (procesar_lista la
+// devuelve a notificaciones si no encuentra el pago), de modo que un cliente
+// puede agotar la memoria del proceso solo llamando a /notificapagos/.
+// Aqui se acotan a maxNotifPendientes entradas: se descarta la mas antigua
+// inserta (Go no ordena mapas, asi que el rango da una clave cualquiera; peor
+// caso se pierde una notificacion huerfana, que ya no se iba a aplicar nunca).
+const maxNotifPendientes = 1000
+
+// acotarNotifLocked recorta un mapa de notificaciones a maxNotifPendientes
+// entradas (asume mu tomado).
+func acotarNotifLocked[T any](nombre string, m map[string]T) {
+	for len(m) >= maxNotifPendientes {
+		for k := range m {
+			delete(m, k)
+			utils.VerError(fmt.Sprintf("pagosadmin: mapa %s lleno (%d entradas), notificacion descartada", nombre, maxNotifPendientes))
+			break
+		}
+	}
+}
+
+// limpiarNotifLocked borra la notificacion ya aplicada de los mapas
+// auxiliares (asume mu tomado).
+func (a *AdminPagos) limpiarNotifLocked(ext string) {
+	delete(a.notifPr, ext)
+	delete(a.notifjson, ext)
+}
+
+// LimpiarNotif borra de los mapas de notificaciones lo asociado a externalid.
+// Se invoca cuando el pago ya quedo persistido: a partir de ahi la
+// notificacion en memoria ya no se va a leer ni a aplicar, y sin esta limpieza
+// notifjson/notifPr crecian para siempre (el Python tampoco los limpia, pero
+// ahi el proceso era de vida corta).
+func (a *AdminPagos) LimpiarNotif(externalid string) {
+	a.mu.Lock()
+	defer a.mu.Unlock()
+	a.limpiarNotifLocked(externalid)
+}
+
 // Notifica replica AdminPagos.notifica.
 func (a *AdminPagos) Notifica(ctx context.Context, req *models.NotificacionRequest) {
 	a.mu.Lock()
@@ -332,7 +424,9 @@ func (a *AdminPagos) Notifica(ctx context.Context, req *models.NotificacionReque
 		}
 	}
 	if !notificado {
+		acotarNotifLocked("notificaciones", a.notificaciones)
 		a.notificaciones[req.ExternalId] = req
+		acotarNotifLocked("notifjson", a.notifjson)
 		a.notifjson[req.ExternalId] = a.logLocked("n", req, "")
 	}
 	a.mu.Unlock()
@@ -389,12 +483,42 @@ func (a *AdminPagos) ProcesarLista(ctx context.Context) {
 			delete(a.solPagos, ext)
 		}
 	}
+	onGuardado := a.onGuardado
 	a.mu.Unlock()
 
+	// Un fallo de Guarda NO puede perder el pago: se reencola para el proximo
+	// ciclo en lugar de descartarlo (antes solo se escribia el error y el pago
+	// se perdia de forma permanente ante cualquier fallo de BD).
+	// Los errores PERMANENTES (violacion de FK, unique, check, not-null...) no
+	// se reintentan: un INSERT que viola una FK volveria a fallar en cada ciclo
+	// para siempre (el bug original de idurl=0 lo hacia endlessly) y el pago
+	// ocuparia memoria + I/O de log indefinidamente.
+	var fallidos []*DataPago
 	for _, p := range vencidos {
 		if err := p.Guarda(ctx); err != nil {
-			utils.VerError("pagosadmin.Guarda: " + err.Error())
+			permanente := esErrorPermanente(err)
+			n := p.sumaIntento()
+			utils.VerError(fmt.Sprintf("pagosadmin.Guarda: %s (intento %d, permanente=%v)", err.Error(), n, permanente))
+			if !permanente && n < maxIntentosGuardado {
+				fallidos = append(fallidos, p)
+			}
+			continue
 		}
+		// Persistido: el ciclo del pago termino, se liberan los marcadores.
+		if onGuardado != nil {
+			onGuardado(p.ExternalId)
+		}
+	}
+
+	if len(fallidos) > 0 {
+		a.mu.Lock()
+		for _, p := range fallidos {
+			// No pisa una entrada mas reciente del mismo ExternalId.
+			if _, existe := a.solPagos[p.ExternalId]; !existe {
+				a.solPagos[p.ExternalId] = p
+			}
+		}
+		a.mu.Unlock()
 	}
 
 	// 2) Notificaciones pendientes -> actualizar pagos
@@ -427,11 +551,18 @@ func (a *AdminPagos) ProcesarLista(ctx context.Context) {
 
 		a.mu.Lock()
 		a.notifPr[ext] = payload
+		acotarNotifLocked("notifPr", a.notifPr)
+		// Si el pago existe en BD y se actualizo, la notificacion en memoria
+		// (notifjson/notifPr) ya cumplio su funcion: se limpia para no filtrar.
+		if _, reencolar := devolver[ext]; !reencolar {
+			a.limpiarNotifLocked(ext)
+		}
 		a.mu.Unlock()
 	}
 
 	a.mu.Lock()
 	for ext, payload := range devolver {
+		acotarNotifLocked("notificaciones", a.notificaciones)
 		a.notificaciones[ext] = payload
 	}
 	a.mu.Unlock()

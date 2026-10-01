@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/signal"
 	"strconv"
+	"sync"
 	"syscall"
 	"time"
 
@@ -119,10 +120,22 @@ func main() {
 
 	// 7) Goroutine procesadorListas: cada 30s procesa los pagos vencidos o
 	// notificados (replica la tarea de background de main.py).
+	//
+	// Con un contexto cancelable + WaitGroup: antes el bucle usaba
+	// context.Background() y no terminaba nunca, de modo que el shutdown
+	// cerraba el pool de PostgreSQL mientras esta goroutine consultaba.
+	ctx, cancelProcesador := context.WithCancel(ctx)
+	var wg sync.WaitGroup
+	wg.Add(1)
 	go func() {
+		defer wg.Done()
 		for {
 			a.ProcesarLista(ctx)
-			time.Sleep(30 * time.Second)
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(30 * time.Second):
+			}
 		}
 	}()
 
@@ -140,10 +153,19 @@ func main() {
 	mux.HandleFunc("/", http.NotFound)
 
 	// 11) Crear servidor HTTP con el middleware de X-Process-Time.
+	// Los timeouts no estan en el uvicorn del legacy: sin ellos el servidor
+	// queda expuesto a slowloris (conexiones que nunca terminan de mandar
+	// cabeceras) y a conexiones Keep-Alive que retienen un handler para siempre.
+	// WriteTimeout > 60s porque /pago/ es sincrono y espera la notificacion de
+	// ETECSA (cicloespera) hasta ValidTime segundos (<= 3600).
 	addr := fmt.Sprintf("%s:%d", config.Cfg.APIHost, config.Cfg.APIPort)
 	srv := &http.Server{
-		Addr:    addr,
-		Handler: middleware(mux),
+		Addr:              addr,
+		Handler:           middleware(mux),
+		ReadHeaderTimeout: 10 * time.Second,
+		ReadTimeout:       30 * time.Second,
+		WriteTimeout:      70 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	// 12) Canal para errores fatales del servidor.
@@ -177,6 +199,11 @@ func main() {
 		utils.VerError("Error durante el shutdown del servidor: " + err.Error())
 		os.Exit(1)
 	}
+
+	// 15.1) Detener el procesador de listas y esperar a que salga ANTES de
+	// cerrar el pool: si no, la ultima iteracion consulta una BD ya cerrada.
+	cancelProcesador()
+	wg.Wait()
 
 	// 16) Cerrar recursos (replica el shutdown del lifespan de main.py:
 	// close_httpx_client -> close_redis -> pool.close()).

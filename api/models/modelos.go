@@ -72,8 +72,15 @@ func (r *SolicitudPagoRequest) Validate() *ValidationError {
 	} else {
 		r.Currency = up
 	}
-	if _, err := strconv.Atoi(r.ValidTime); err != nil {
+	if vt, err := strconv.Atoi(r.ValidTime); err != nil {
 		errs = append(errs, valueError("ValidTime", "ValidTime debe ser un número entero"))
+	} else if vt < minValidTime || vt > maxValidTime {
+		// DESVIACION del pydantic legacy: alli solo se comprueba que sea entero,
+		// de modo que un ValidTime enorme (o negativo) se traducía en un
+		// cicloespera que aguanta un goroutine + polling a Redis cada 500 ms
+		// durante años, o en un vencimiento ya pasado.
+		errs = append(errs, valueError("ValidTime",
+			fmt.Sprintf("ValidTime debe estar entre %d y %d segundos", minValidTime, maxValidTime)))
 	}
 
 	if len(errs) > 0 {
@@ -81,6 +88,12 @@ func (r *SolicitudPagoRequest) Validate() *ValidationError {
 	}
 	return nil
 }
+
+// Cotas de ValidTime (segundos). Ver SolicitudPagoRequest.Validate.
+const (
+	minValidTime = 30
+	maxValidTime = 3600
+)
 
 // CancelarRequest — Cancelar solicitud de pago
 type CancelarRequest struct {

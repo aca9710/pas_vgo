@@ -61,6 +61,13 @@ Environment variables in `.env` file. Falls back to hardcoded defaults in `confi
    Cada endpoint debe estar explicado en un documento llamado doc/endpoint_ref.md
    que debe tener las siguientes secciones por cada uno titulo, url, metodo, entrada (cada campo de entrada explicado), header, descripcion, salida(cada campo explicado)
 
+## Forma de probar este API
+   En la carpeta /home/arturo/proyectos/2026/pasarela/go/api/stress hay un programa probarapi_tpv312.py que sirve para enviar pagos a este api, en la carpeta /home/arturo/proyectos/2026/pasarela/go/api/sim_transf esta el programa sim312.py que sirve como nodo de destino a las conexiones al puerto 15001 iniciadas por este api   
+   
+   Este es el flujo
+   probarapi_tpv312.py -> api(pasarela) -> sim312.py
+
+
 ## API Endpoints
 
 | Path | Method | Description |

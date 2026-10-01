@@ -1,0 +1,68 @@
+[config]
+ip_sim= pagomovil.cimex.com.cu
+puerto_sim = 80
+
+
+[pagos]
+1 = 1225
+2 = 1345
+3 = 1000
+4 = 1001
+5 = 1002
+
+[1225]
+IDCaja: AM20140070
+Phone: -1
+ValidTime: 30
+Source: 30015
+Currency: CUC
+Amount: 0.02
+ExternalId: CO00002-1255
+Description: arturo
+
+[1345]
+IDCaja: AM20140070
+Phone: -1
+ValidTime: 25
+Source: 30010
+Currency: CUC
+Amount: 3.95
+ExternalId: CO00002-1345
+Description: arturo
+
+[1000]
+IDCaja: AM20140070
+Phone: -1
+ValidTime: 25
+Source: 30010
+Currency: CUC
+Amount: 3.95
+ExternalId: CO00002-1000
+Description: arturo
+
+[1001]
+IDCaja: AM20140070
+Phone: -1
+ValidTime: 25
+Source: 30010
+Currency: CUC
+Amount: 1.10
+ExternalId: CO00002-1001
+Description: arturo
+
+[1002]
+IDCaja: AM20140070
+Phone: -1
+ValidTime: 25
+Source: 30010
+Currency: CUC
+Amount: 5.25
+ExternalId: CO00002-1002
+Description: arturo
+
+
+
+
+
+
+

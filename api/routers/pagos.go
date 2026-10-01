@@ -307,6 +307,14 @@ func procesaPago(r *http.Request, req *models.SolicitudPagoRequest, externalid, 
 		return models.SolicitudPagoResponse{ExternalId: externalid, Estado: 500, Msg: err.Error()}
 	}
 
+	// Marca el pago como pendiente de notificacion ANTES de llamar a ETECSA:
+	// si no, ETECSA puede responder y notificar antes de que exista la marca,
+	// y cicloespera veria "no pendiente" en su primer tick y devolveria
+	// NOTIFICADA sin haber esperado nada (falso exito en todos los pagos).
+	// Si el POST falla, el pago sigue en solPagos y al vencer lo limpia
+	// ProcesarLista (que ademas lo saca de por_notificar).
+	addPorNotificar(ctx, externalid)
+
 	// Replica: pago_dict = data.model_dump() + ajustes, luego el POST a ETECSA.
 	pagoDict := buildPagoDict(req)
 	utils.Traza(fmt.Sprintf("Enviando solicitud de pago a %s", config.Cfg.OrdenPago), idTraza)

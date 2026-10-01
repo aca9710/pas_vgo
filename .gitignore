@@ -42,7 +42,8 @@ logs/
 /web/openspec.zip
 
 # Sesiones de opencode
-session-ses_*.md
+session-*.md
+memoria*.md
 .ses/
 
 # Backups y temporales

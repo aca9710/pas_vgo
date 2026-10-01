@@ -125,6 +125,24 @@ func TestSolicitudPagoRequestValidate(t *testing.T) {
 				field:   "ValidTime",
 				wantMsg: "entero",
 			},
+			{
+				name:    "ValidTime negativo",
+				mutate:  func(r *SolicitudPagoRequest) { r.ValidTime = "-60" },
+				field:   "ValidTime",
+				wantMsg: "entre 30 y 3600",
+			},
+			{
+				name:    "ValidTime por debajo del minimo",
+				mutate:  func(r *SolicitudPagoRequest) { r.ValidTime = "5" },
+				field:   "ValidTime",
+				wantMsg: "entre 30 y 3600",
+			},
+			{
+				name:    "ValidTime por encima del maximo (DoS de goroutines)",
+				mutate:  func(r *SolicitudPagoRequest) { r.ValidTime = "999999999" },
+				field:   "ValidTime",
+				wantMsg: "entre 30 y 3600",
+			},
 		}
 		for _, c := range cases {
 			t.Run(c.name, func(t *testing.T) {
@@ -156,6 +174,16 @@ func TestSolicitudPagoRequestValidate(t *testing.T) {
 		}
 		if req.Currency != "USD" {
 			t.Errorf("Currency deberia normalizarse a USD, obtuve %q", req.Currency)
+		}
+	})
+
+	t.Run("ValidTime en los limites se acepta", func(t *testing.T) {
+		for _, vt := range []string{"30", "3600", "600"} {
+			req := base
+			req.ValidTime = vt
+			if err := req.Validate(); err != nil {
+				t.Errorf("ValidTime %q deberia ser valido: %v", vt, err)
+			}
 		}
 	})
 }

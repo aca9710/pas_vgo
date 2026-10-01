@@ -11,6 +11,7 @@ import (
 	"net/http"
 	"reflect"
 	"strings"
+	"sync"
 	"time"
 
 	"pasarela/config"
@@ -25,17 +26,40 @@ import (
 // AdminPagos global (equivalente a get_admpagos de routers/pagos.py)
 // =============================================================================
 
-var admin *pagosadmin.AdminPagos
+var (
+	adminMu sync.Mutex
+	admin   *pagosadmin.AdminPagos
+)
 
 // SetAdmin inicializa el AdminPagos global (llamado desde main).
 func SetAdmin(a *pagosadmin.AdminPagos) {
-	admin = a
+	adminMu.Lock()
+	defer adminMu.Unlock()
+	admin = wireAdmin(a)
+}
+
+// wireAdmin conecta a un AdminPagos recien creado el callback que limpia los
+// marcadores de Redis. Las claves (pasarela:listaid / pasarela:por_notificar)
+// son de este paquete, por eso pagosadmin no importa redisclient.
+func wireAdmin(a *pagosadmin.AdminPagos) *pagosadmin.AdminPagos {
+	a.SetOnGuardado(func(externalid string) {
+		ctx := context.Background()
+		removeListaID(ctx, externalid)
+		removePorNotificar(ctx, externalid)
+		// Liberar caches auxiliares de notificaciones para este externalid (evita
+		// que notifjson/notifPr crezcan indefinidamente).
+		admpagos := getAdmin()
+		admpagos.LimpiarNotif(externalid)
+	})
+	return a
 }
 
 // getAdmin devuelve el AdminPagos, inicializandolo perezosamente si falta.
 func getAdmin() *pagosadmin.AdminPagos {
+	adminMu.Lock()
+	defer adminMu.Unlock()
 	if admin == nil {
-		admin = pagosadmin.New(database.Get())
+		admin = wireAdmin(pagosadmin.New(database.Get()))
 	}
 	return admin
 }
@@ -71,9 +95,20 @@ func writeValidationError(w http.ResponseWriter, ve *models.ValidationError) {
 	writeJSON(w, http.StatusUnprocessableEntity, ve)
 }
 
+// Limites de tamano de payload. El legacy (FastAPI/httpx) no los tenia:
+// io.ReadAll sin tope permitia un body ilimitado en la entrada y una respuesta
+// ilimitada de ETECSA.
+const (
+	maxRequestBody  = 1 << 20 // 1 MiB
+	maxResponseBody = 4 << 20 // 4 MiB
+)
+
 // decodeJSON lee el body, verifica campos requeridos (como pydantic) y
 // deserializa en v. Devuelve false si ya se escribio la respuesta de error.
 func decodeJSON(w http.ResponseWriter, r *http.Request, v any, required []string) bool {
+	// MaxBytesReader corta la lectura al superarse el limite (y cierra el body),
+	// de modo que un body gigante no se buffers en memoria.
+	r.Body = http.MaxBytesReader(w, r.Body, maxRequestBody)
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
 		writeJSON(w, http.StatusUnprocessableEntity, map[string]any{
@@ -174,7 +209,9 @@ func doRequest(ctx context.Context, method, url, body string, headers map[string
 	}
 	defer resp.Body.Close()
 
-	data, err := io.ReadAll(resp.Body)
+	// La respuesta de ETECSA tambien tiene tope: un host comprometido (o un
+	// MITM) no puede agotar la memoria del proceso.
+	data, err := io.ReadAll(http.MaxBytesReader(nil, resp.Body, maxResponseBody))
 	if err != nil {
 		return nil, err
 	}
@@ -203,7 +240,23 @@ func toInt(v any) int {
 	switch t := v.(type) {
 	case int:
 		return t
+	case int8:
+		return int(t)
+	case int16:
+		return int(t)
+	case int32:
+		return int(t)
 	case int64:
+		return int(t)
+	case uint8:
+		return int(t)
+	case uint16:
+		return int(t)
+	case uint32:
+		return int(t)
+	case uint64:
+		return int(t)
+	case float32:
 		return int(t)
 	case float64:
 		return int(t)
@@ -219,8 +272,24 @@ func toInt64(v any) int64 {
 	switch t := v.(type) {
 	case int:
 		return int64(t)
+	case int8:
+		return int64(t)
+	case int16:
+		return int64(t)
+	case int32:
+		return int64(t)
 	case int64:
 		return t
+	case uint8:
+		return int64(t)
+	case uint16:
+		return int64(t)
+	case uint32:
+		return int64(t)
+	case uint64:
+		return int64(t)
+	case float32:
+		return int64(t)
 	case float64:
 		return int64(t)
 	case json.Number:
@@ -233,11 +302,27 @@ func toInt64(v any) int64 {
 
 func toFloat64(v any) float64 {
 	switch t := v.(type) {
+	case float32:
+		return float64(t)
 	case float64:
 		return t
 	case int:
 		return float64(t)
+	case int8:
+		return float64(t)
+	case int16:
+		return float64(t)
+	case int32:
+		return float64(t)
 	case int64:
+		return float64(t)
+	case uint8:
+		return float64(t)
+	case uint16:
+		return float64(t)
+	case uint32:
+		return float64(t)
+	case uint64:
 		return float64(t)
 	case json.Number:
 		f, _ := t.Float64()
@@ -259,6 +344,8 @@ func toString(v any) string {
 	case int64:
 		return fmt.Sprintf("%d", t)
 	case int:
+		return fmt.Sprintf("%d", t)
+	case int32:
 		return fmt.Sprintf("%d", t)
 	default:
 		return fmt.Sprintf("%v", t)

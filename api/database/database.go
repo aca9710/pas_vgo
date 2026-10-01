@@ -22,6 +22,13 @@ type Database struct {
 
 // normalizeValue convierte tipos pgx a tipos Go planos (como hace asyncpg:
 // numeric -> float, timestamp -> time.Time, etc.).
+//
+// OJO: al escanear en *any, pgx v5 devuelve el tipo NATIVO de Go (int32 para
+// int4, int64 para int8, float64 para numeric, string para varchar, bool, ...).
+// Los casos pgtype.* de abajo solo aplican si algun dia se escanea en un
+// pgtype.X concreto; con el codigo actual son defensivos. Los consumidores
+// (routers.toInt, utils.toInt, ...) deben reconocer los tipos nativos: un
+// int4 de PostgreSQL llega como int32, no como int ni como int64.
 func normalizeValue(v any) any {
 	switch t := v.(type) {
 	case nil:
